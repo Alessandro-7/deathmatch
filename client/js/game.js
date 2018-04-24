@@ -48,6 +48,10 @@ Img.player = new Image();
 Img.player.src = '/client/img/player.png';
 Img.bullet = new Image();
 Img.bullet.src = '/client/img/bullet.png';
+
+Img.superBullet = new Image();
+Img.superBullet.src = '/client/img/superBullet.png';
+
 Img.map = new Image();
 Img.map.src = '/client/img/map.png';
 
@@ -64,6 +68,8 @@ let Player = function(initPack){
   self.hp = initPack.hp;
   self.hpMax = initPack.hpMax;
   self.score = initPack.score;
+  self.superBullets = initPack.superBullets;
+  self.superBulletsMax = initPack.superBulletsMax;
   self.draw = function() {
   let x = self.x - Player.list[selfId].x + WIDTH/2;
 	let y = self.y - Player.list[selfId].y + HEIGHT/2;
@@ -88,16 +94,25 @@ let Bullet = function(initPack){
 	self.id = initPack.id;
 	self.x = initPack.x;
 	self.y = initPack.y;
+  self.isSuper = initPack.isSuper;
   self.draw = function() {
-    let width = Img.bullet.width/2;
+      let x = self.x - Player.list[selfId].x + WIDTH/2;
+      let y = self.y - Player.list[selfId].y + HEIGHT/2;
+
+      if (!self.isSuper) {
+      let width = Img.bullet.width/2;
   		let height = Img.bullet.height/2;
-
-  		let x = self.x - Player.list[selfId].x + WIDTH/2;
-  		let y = self.y - Player.list[selfId].y + HEIGHT/2;
-
   		ctx.drawImage(Img.bullet,
   			0,0,Img.bullet.width,Img.bullet.height,
   			x-width/2,y-height/2,width,height);
+      }
+      else {
+        let width = Img.superBullet.width/2;
+        let height = Img.superBullet.height/2;
+        ctx.drawImage(Img.superBullet,
+          0,0,Img.superBullet.width,Img.superBullet.height,
+          x-width/2,y-height/2,width,height);
+      }
   }
 	Bullet.list[self.id] = self;
 	return self;
@@ -131,6 +146,8 @@ socket.on('update',function(data){
   			p.hp = pack.hp;
       if(pack.score !== undefined)
         p.score = pack.score;
+      if(pack.superBullets !== undefined)
+        p.superBullets = pack.superBullets;
   	}
   }
   for(let i = 0 ; i < data.bullet.length; i++){
@@ -161,6 +178,7 @@ setInterval(function(){
   ctx.clearRect(0,0,500,500);
   drawMap();
   drawScore();
+  drawSuperBulletsCount();
   for(let i in Player.list)
     Player.list[i].draw();
   for(let i in Bullet.list)
@@ -170,15 +188,22 @@ setInterval(function(){
 
 let drawMap = function(){
 
-let x = WIDTH/2 - Player.list[selfId].x;
-let y = HEIGHT/2 - Player.list[selfId].y;
-ctx.drawImage(Img.map, x, y, Img.map.width*1.5, Img.map.height*1.5);
+  let x = WIDTH/2 - Player.list[selfId].x;
+  let y = HEIGHT/2 - Player.list[selfId].y;
+  ctx.drawImage(Img.map, x, y, Img.map.width*1.5, Img.map.height*1.5);
 }
 
 let drawScore = function(){
-ctx.fillStyle = 'white';
-ctx.fillText(Player.list[selfId].score,0,30);
+  ctx.fillStyle = 'white';
+  ctx.fillText(Player.list[selfId].score,0,30);
 }
+
+let drawSuperBulletsCount = function(){
+  ctx.fillStyle = 'black';
+  ctx.fillText(Player.list[selfId].superBullets,443,488);
+  ctx.fillText('SB: ',390,488);
+}
+
 
 document.onkeydown = function(event){
   if (event.keyCode === 68)    //d
@@ -189,6 +214,8 @@ document.onkeydown = function(event){
       socket.emit('keyPress',{inputId:'left',state:true});
   else if(event.keyCode === 87) // w
       socket.emit('keyPress',{inputId:'up',state:true});
+  else if(event.keyCode === 32) // w
+      socket.emit('keyPress',{inputId:'superAttack',state:true});
 
 }
 document.onkeyup = function(event){
@@ -200,6 +227,8 @@ document.onkeyup = function(event){
       socket.emit('keyPress', {inputId:'left',state:false});
   else if(event.keyCode === 87) // w
       socket.emit('keyPress', {inputId:'up',state:false});
+  else if(event.keyCode === 32) // w
+      socket.emit('keyPress', {inputId:'superAttack',state:false});
 }
 
 document.onmousedown = function(event){

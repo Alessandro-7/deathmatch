@@ -43,23 +43,35 @@ self.pressingLeft = false;
 self.pressingUp = false;
 self.pressingDown = false;
 self.pressingAttack = false;
+self.pressingSuperAttack = false
 self.mouseAngle = 0;
 self.maxSpd = 10;
 self.hp = 10;
 self.hpMax = 10;
 self.score = 0;
+self.superBullets = 500;
+self.superBulletsMax = 500;
 
 let super_update = self.update;
 self.update = function() {
-self.updateSpd();
-super_update();
+  self.updateSpd();
+  super_update();
 
-if(self.pressingAttack){
-    self.shootBullet(self.mouseAngle);
+  if(self.pressingAttack){
+      self.shootBullet(self.mouseAngle, false);
+  }
+  if (self.pressingSuperAttack) {
+    for (let i = -3; i < 3; ++i) {
+      if (self.superBullets > 0) {
+        self.shootBullet(i * 10 + self.mouseAngle, true);
+        self.superBullets--;
+      }
+
+    }
+  }
 }
-}
-self.shootBullet = function(angle) {
-  let b = Bullet(self.id, angle);
+self.shootBullet = function(angle, isSuper) {
+  let b = Bullet(self.id, isSuper, angle);
   b.x = self.x;
   b.y = self.y;
 }
@@ -94,7 +106,9 @@ self.getInitPack = function() {
    number: self.number,
    hp: self.hp,
    hpMax: self.hpMax,
-   score: self.score
+   score: self.score,
+   superBullets: self.superBullets,
+   superBulletsMax: self.superBulletsMax
  }
 }
 self.getUpdatePack = function() {
@@ -103,7 +117,8 @@ self.getUpdatePack = function() {
    x: self.x,
    y: self.y,
    hp: self.hp,
-   score: self.score
+   score: self.score,
+  superBullets: self.superBullets,
  }
 }
 Player.list[id] = self;
@@ -126,6 +141,8 @@ socket.on('keyPress', function(data){
         player.pressingAttack = data.state;
     else if(data.inputId === 'mouseAngle')
         player.mouseAngle = data.state;
+    else if(data.inputId === 'superAttack')
+        player.pressingSuperAttack = data.state;
   });
 
 
@@ -166,7 +183,7 @@ return pack;
 }
 
 
-let Bullet = function(parent, angle){
+let Bullet = function(parent, isSuper, angle){
 let self = Entity();
 self.id = Math.random();
 self.spdX = Math.cos(angle/180*Math.PI) * 10;
@@ -174,6 +191,7 @@ self.spdY = Math.sin(angle/180*Math.PI) * 10;
 self.parent = parent;
 self.timer = 0;
 self.toRemove = false;
+self.isSuper = isSuper;
 let super_update = self.update;
 self.update = function(){
     if(self.timer++ > 100)
@@ -191,6 +209,7 @@ self.update = function(){
           p.hp = p.hpMax;
           p.x = 250 + Math.random() * 740;
           p.y = 250 + Math.random() * 740;
+          p.superBullets = p.superBulletsMax;
         }
         self.toRemove = true;
       }
@@ -203,6 +222,7 @@ self.getInitPack = function() {
     id: self.id,
     x: self.x,
     y: self.y,
+    isSuper: self.isSuper
   }
 }
 self.getUpdatePack = function() {

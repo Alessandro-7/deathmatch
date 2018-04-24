@@ -176,7 +176,7 @@ ctx.drawImage(Img.map, x, y, Img.map.width*1.5, Img.map.height*1.5);
 }
 
 let drawScore = function(){
-ctx.fillStyle = 'black';
+ctx.fillStyle = 'white';
 ctx.fillText(Player.list[selfId].score,0,30);
 }
 

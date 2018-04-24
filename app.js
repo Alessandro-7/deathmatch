@@ -189,8 +189,8 @@ self.update = function(){
           if (shooter)
             shooter.score++;
           p.hp = p.hpMax;
-          p.x = Math.random() * 500;
-          p.y = Math.random() * 500;
+          p.x = 250 + Math.random() * 740;
+          p.y = 250 + Math.random() * 740;
         }
         self.toRemove = true;
       }
@@ -247,6 +247,13 @@ io.sockets.on('connection', function(socket) {
 socket.id = Math.random();
 SOCKET_LIST[socket.id] = socket;
 
+socket.on('chatBotMessage', function (data) {
+  console.log(data);
+  for (let i in SOCKET_LIST) {
+    SOCKET_LIST[i].emit('addToChat',  "BOT: " + data);
+  }
+});
+
 socket.on('signIn',function(data) {
 Player.onConnect(socket, data.username);
 console.log('Socket connected');
@@ -279,7 +286,7 @@ player: Player.update(),
 bullet: Bullet.update()
 }
 
-for(let i in SOCKET_LIST){
+for (let i in SOCKET_LIST){
   let socket = SOCKET_LIST[i];
   socket.emit('init', initPack);
   socket.emit('update', pack);
